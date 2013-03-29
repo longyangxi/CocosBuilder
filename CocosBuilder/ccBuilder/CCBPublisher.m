@@ -588,6 +588,7 @@
 
 - (BOOL) containsCCBFile:(NSString*) dir
 {
+    //test
     NSFileManager* fm = [NSFileManager defaultManager];
     ResourceManager* resManager = [ResourceManager sharedManager];
     NSArray* files = [fm contentsOfDirectoryAtPath:dir error:NULL];
