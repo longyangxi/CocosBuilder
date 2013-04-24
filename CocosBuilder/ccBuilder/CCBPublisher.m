@@ -38,6 +38,8 @@
 #import "Tupac.h"
 #import "CCBPublisherTemplate.h"
 #import "CCBDirectoryComparer.h"
+#import "ResourceManager.h"
+#import "ResourceManagerUtil.h"
 
 @implementation CCBPublisher
 
@@ -175,13 +177,17 @@
         // Skip sprite sheets that are already published
         NSString* spriteSheetDir = [outDir stringByDeletingLastPathComponent];
         NSString* spriteSheetName = [outDir lastPathComponent];
+        
+        NSString *subPath = [[ResourceManagerUtil relativePathFromAbsolutePath:srcFile] stringByDeletingLastPathComponent];
+        
+        ProjectSettingsGeneratedSpriteSheet* ssSettings = [projectSettings smartSpriteSheetForSubPath:subPath];
 
         NSString* spriteSheetFile = NULL;
         if (publishToSingleResolution) spriteSheetFile = outDir;
         else spriteSheetFile = [[spriteSheetDir stringByAppendingPathComponent:[NSString stringWithFormat:@"resources-%@", resolution]] stringByAppendingPathComponent:spriteSheetName];
         
         NSDate* dstDate = [CCBFileUtil modificationDateForFile:[spriteSheetFile stringByAppendingPathExtension:@"plist"]];
-        if (dstDate && [dstDate isEqualToDate:srcDate])
+        if (dstDate && [dstDate isEqualToDate:srcDate] && !ssSettings.isDirty)
         {
             return YES;
         }
@@ -822,12 +828,8 @@
         if (![self publishDirectory:dir subPath:NULL]) return NO;
     }
     
-    //NSLog(@"publishedResources: %@", publishedResources);
-    
     // Publish generated files
     [self publishGeneratedFiles];
-    
-    //NSLog(@"Renamed files: %@", renamedFiles);
     
     // Yiee Haa!
     return YES;
@@ -867,8 +869,6 @@
     CCBDirectoryComparer* dc = [[[CCBDirectoryComparer alloc] init] autorelease];
     [dc loadDirectory:outputDir];
     NSArray* fileList = [dc diffWithFiles:diffFiles];
-    
-    NSLog(@"fileList: %@", fileList);
     
     // Zip it up!
     NSTask* zipTask = [[NSTask alloc] init];
